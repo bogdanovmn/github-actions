@@ -25,16 +25,20 @@ jobs:
           node-version: '18'
 
       # Build Frontend with linked library
-      - name: Build Frontend
-        run: |
-          npm ci
-          npm run build
-
-      # Rest of your deployment steps
       - name: Set variables
         id: vars
         run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-5)
+          TIMESTAMP=$(date +'%Y%m%d')
+          echo "FRONTEND_VERSION=$TIMESTAMP.$SHORT_SHA.${{ github.run_number }}" >> $GITHUB_OUTPUT
           echo "TARGET_DIR=/home/www/${{ inputs.service_name }}" >> $GITHUB_OUTPUT
+
+      - name: Build Frontend
+        run: |
+          npm ci
+          FRONTEND_VERSION=${{ steps.vars.outputs.FRONTEND_VERSION }} npm run build
+
+      # Rest of your deployment steps
 
       - name: Prepare VPS
         id: prepare
